@@ -8,7 +8,7 @@
 ## License restrictions 许可限制
 Non-Mainland China (except China Hong Kong, China Macau, and China Taiwan) individuals or companies are subject to an MIT license.
 
-非中国大陆（中国香港、中国澳门和中国台湾除外）的个人或公司须遵守 MIT 许可证。
+非中国大陆地区（中国香港、中国澳门和中国台湾除外）的个人或公司须遵守 MIT 许可证。
 
 Individuals or companies in mainland China (except China Hong Kong, China Macau, and China Taiwan) are prohibited from using this MIT license and using this repository and products if the following circumstances apply:
 
