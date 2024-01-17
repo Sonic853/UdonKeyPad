@@ -8,7 +8,7 @@ using VRC.Udon;
 
 namespace Sonic853.Udon.UdonKeypad
 {
-    public class Keypad : UdonSharpBehaviour
+    public class KeypadInputField : UdonSharpBehaviour
     {
         [SerializeField] public string Passcode;
         public string _passcode

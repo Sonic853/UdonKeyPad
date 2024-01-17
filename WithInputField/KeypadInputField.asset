@@ -10,10 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
-  m_Name: Keypad
+  m_Name: KeypadInputField
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 2ec1451a953e6a74a961470ee466b265,
-    type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 02868c85a1e6cb64395947a5c68d7245, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 493d8d8903a639d45b684895a80bbee9, type: 3}
@@ -21,7 +20,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 0
   hasInteractEvent: 0
-  scriptID: 4016647419338681608
+  scriptID: -5586186992442688093
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
