@@ -5,12 +5,26 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRC.SDKBase;
 using VRC.Udon;
+using VRC.Udon.Common.Interfaces;
 
 namespace Sonic853.Udon.UdonKeypad
 {
-    public class KeypadInputField : UdonSharpBehaviour
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    public class KeypadInputField : SyncBehaviour
     {
-        [SerializeField] public string Passcode;
+        /// <summary>
+        /// 全局锁
+        /// </summary>
+        [Header("全局锁")]
+        public bool isGlobal = false;
+        /// <summary>
+        /// 密码
+        /// </summary>
+        [Header("密码")]
+        public string Passcode;
+        /// <summary>
+        /// 密码（用户输入）
+        /// </summary>
         public string _passcode
         {
             get
@@ -22,32 +36,73 @@ namespace Sonic853.Udon.UdonKeypad
                 inputField.text = value;
             }
         }
+        /// <summary>
+        /// 是锁定的
+        /// </summary>
         [Header("是锁定的")]
-        [SerializeField] public bool _isLocked = true;
+        [UdonSynced]
+        public bool isLocked = true;
+        /// <summary>
+        /// 自动输入
+        /// </summary>
         [Header("自动输入")]
-        [SerializeField] public bool _autoEnter = false;
+        public bool _autoEnter = false;
+        /// <summary>
+        /// 显示文字
+        /// </summary>
         [Header("显示文字")]
-        [SerializeField] private Text Placeholder;
+        [SerializeField] private Text placeholder;
+        /// <summary>
+        /// 输入框
+        /// </summary>
         [Header("输入框")]
         [SerializeField] private InputField inputField;
+        /// <summary>
+        /// 解锁时显示的物体
+        /// </summary>
         [Header("解锁时显示的物体")]
-        [SerializeField] public GameObject[] _lockHiedObjects;
+        public GameObject[] _lockHiedObjects;
+        /// <summary>
+        /// 锁定时显示的物体
+        /// </summary>
         [Header("锁定时显示的物体")]
-        [SerializeField] public GameObject[] _lockShowObjects;
+        public GameObject[] _lockShowObjects;
+        /// <summary>
+        /// 是否打乱按钮顺序
+        /// </summary>
         [Header("是否打乱按钮顺序")]
-        [SerializeField] public bool _isRandomButton = false;
+        public bool _isRandomButton = false;
+        /// <summary>
+        /// 密码按钮
+        /// </summary>
         [NonSerialized] private GameObject[] Buttons = new GameObject[0];
+        /// <summary>
+        /// 启用玩家传送
+        /// </summary>
         [Header("启用玩家传送")]
-        [SerializeField] public bool _enableTeleport = false;
+        public bool _enableTeleport = false;
+        /// <summary>
+        /// 全局玩家传送（Danger）全部玩家会传送到一个点上
+        /// </summary>
+        [Header("全局玩家传送 **Danger**")]
+        public bool teleportIsGlobal = false;
+        /// <summary>
+        /// 使用传送点角度方向
+        /// </summary>
+        [Header("使用传送点角度方向")]
+        public bool useTeleportPointRotation = true;
+        /// <summary>
+        /// 传送点
+        /// </summary>
         [Header("传送点")]
-        [SerializeField] public Transform _teleportPoint;
-        void Start()
+        public Transform _teleportPoint;
+        protected override void Start()
         {
-            if (Placeholder == null)
+            if (placeholder == null)
             {
-                Placeholder = (Text)gameObject.GetComponentInChildren(typeof(Text));
+                placeholder = (Text)gameObject.GetComponentInChildren(typeof(Text));
             }
-            if (Placeholder == null)
+            if (placeholder == null)
             {
                 Debug.LogError("Keypad: Placeholder is not set!");
             }
@@ -84,27 +139,52 @@ namespace Sonic853.Udon.UdonKeypad
             }
             RandomButton();
 
-            if (_isLocked)
+            if (isGlobal && !Networking.IsOwner(gameObject))
             {
-                Lock();
-                Placeholder.text = "Locked";
+                base.Start();
+                return;
+            }
+            isSynced = true;
+
+            LockCheck();
+        }
+        void LockCheck()
+        {
+            if (isLocked)
+            {
+                if (isGlobal)
+                {
+                    SendCustomNetworkEvent(NetworkEventTarget.All, nameof(Lock));
+                }
+                else
+                {
+                    Lock();
+                }
+                placeholder.text = "Locked";
                 _passcode = "";
             }
             else
             {
-                Unlock();
-                Placeholder.text = "Unlocked";
+                if (isGlobal)
+                {
+                    SendCustomNetworkEvent(NetworkEventTarget.All, teleportIsGlobal ? nameof(UnlockWithTeleport) : nameof(UnlockWithoutTeleport));
+                }
+                else
+                {
+                    Unlock();
+                }
+                placeholder.text = "Unlocked";
                 _passcode = "";
             }
         }
         public bool Lock()
         {
-            if (_isLocked)
+            if (isLocked)
             {
                 return true;
             }
-            _isLocked = true;
-            Placeholder.text = "Locked";
+            isLocked = true;
+            placeholder.text = "Locked";
             _passcode = "";
             foreach (var obj in _lockHiedObjects)
             {
@@ -116,16 +196,19 @@ namespace Sonic853.Udon.UdonKeypad
             }
             return true;
         }
-        public bool Unlock()
+        public bool Unlock() => Unlock(_enableTeleport);
+        public bool UnlockWithTeleport() => Unlock(true);
+        public bool UnlockWithoutTeleport() => Unlock(false);
+        public bool Unlock(bool useTeleport)
         {
-            if (!_isLocked)
+            if (!isLocked)
             {
                 return true;
             }
-            _isLocked = false;
-            Placeholder.text = "Unlocked";
+            isLocked = false;
+            placeholder.text = "Unlocked";
             _passcode = "";
-            GoTeleport();
+            if (useTeleport) GoTeleport();
             foreach (var obj in _lockHiedObjects)
             {
                 obj.SetActive(true);
@@ -140,7 +223,7 @@ namespace Sonic853.Udon.UdonKeypad
         {
             if (_enableTeleport && _teleportPoint != null)
             {
-                Networking.LocalPlayer.TeleportTo(_teleportPoint.position, _teleportPoint.rotation);
+                Networking.LocalPlayer.TeleportTo(_teleportPoint.position, useTeleportPointRotation ? _teleportPoint.rotation : Networking.LocalPlayer.GetRotation());
             }
         }
         public string ButtonPush(string buttonValue)
@@ -151,12 +234,19 @@ namespace Sonic853.Udon.UdonKeypad
                     {
                         if (CheckPasscode())
                         {
-                            Unlock();
+                            if (isGlobal)
+                            {
+                                SendCustomNetworkEvent(NetworkEventTarget.All, teleportIsGlobal ? nameof(UnlockWithTeleport) : nameof(UnlockWithoutTeleport));
+                            }
+                            else
+                            {
+                                Unlock();
+                            }
                             return "Unlocked";
                         }
                         else
                         {
-                            if (!_isLocked)
+                            if (!isLocked)
                             {
                                 return "Unlocked";
                             }
@@ -165,17 +255,24 @@ namespace Sonic853.Udon.UdonKeypad
                     }
                 case "Clear":
                     {
-                        Placeholder.text = "Cleared";
+                        placeholder.text = "Cleared";
                         _passcode = "";
-                        if (!_isLocked)
+                        if (!isLocked)
                         {
-                            Lock();
+                            if (isGlobal)
+                            {
+                                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(Lock));
+                            }
+                            else
+                            {
+                                Lock();
+                            }
                         }
                         return "Cleared";
                     }
                 default:
                     {
-                        if (!_isLocked)
+                        if (!isLocked)
                         {
                             if (_enableTeleport)
                                 GoTeleport();
@@ -195,13 +292,13 @@ namespace Sonic853.Udon.UdonKeypad
             RandomButton();
             if (Passcode == _passcode)
             {
-                Placeholder.text = "Unlocked";
+                placeholder.text = "Unlocked";
                 _passcode = "";
                 return true;
             }
             else
             {
-                Placeholder.text = "Incorrect";
+                placeholder.text = "Incorrect";
                 _passcode = "";
                 return false;
             }
@@ -241,5 +338,10 @@ namespace Sonic853.Udon.UdonKeypad
         public string ButtonPush0() => ButtonPush("0");
         public string ButtonPushEnter() => ButtonPush("Enter");
         public string ButtonPushClear() => ButtonPush("Clear");
+        public override void OnDeserialization()
+        {
+            base.OnDeserialization();
+            LockCheck();
+        }
     }
 }
