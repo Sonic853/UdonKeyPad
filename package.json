@@ -1,0 +1,22 @@
+{
+    "name": "com.sonic853.udonkeypad",
+    "version": "1.0.2",
+    "displayName": "Sonic853 - Udon KeyPad",
+    "description": "A open Source KeyPad | 一个开源的数字密码盘，兼容 VRChat",
+    "unity": "2022.3",
+    "homepage": "https://github.com/Sonic853/UdonKeyPad",
+    "documentationUrl": "https://github.com/Sonic853/UdonKeyPad",
+    "changelogUrl": "https://github.com/Sonic853/UdonKeyPad/releases",
+    "licensesUrl": "https://github.com/Sonic853/UdonKeyPad/blob/master/LICENSE",
+    "license": "MIT",
+    "keywords": [],
+    "author": {
+      "name": "Sonic853",
+      "email": "sonic853@qq.com",
+      "url": "https://github.com/Sonic853"
+    },
+    "legacyFolders": {
+      "Assets\\853Lab\\UdonSharp\\UdonKeypad": "e40fb86c71e7d2249a38fa0e7b0a3f2e"
+    }
+  }
+  
