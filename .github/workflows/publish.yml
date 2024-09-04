@@ -3,6 +3,7 @@ name: Check and Publish Version
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 
