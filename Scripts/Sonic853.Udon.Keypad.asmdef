@@ -1,5 +1,5 @@
 {
-    "name": "Sonic853.Udon.UdonKeypad",
+    "name": "Sonic853.Udon.Keypad",
     "rootNamespace": "",
     "references": [
         "VRC.Udon",

@@ -5,8 +5,9 @@ using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 
-namespace Sonic853.Udon.UdonKeypad
+namespace Sonic853.Udon.Keypad
 {
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class SyncBehaviour : UdonSharpBehaviour
     {
         protected bool isSynced = false;

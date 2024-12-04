@@ -931,11 +931,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2387918222034706177, guid: 32612f039c29f9e4ab6bc306f3ed6b5a, type: 3}
       propertyPath: lockName
-      value: Global
+      value: Global1
       objectReference: {fileID: 0}
     - target: {fileID: 2387918222034706177, guid: 32612f039c29f9e4ab6bc306f3ed6b5a, type: 3}
       propertyPath: rememberUnlockStatus
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2387918222034706177, guid: 32612f039c29f9e4ab6bc306f3ed6b5a, type: 3}
       propertyPath: serializationData.Prefab
@@ -1623,6 +1623,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 551970741518623991, guid: a155a26c114b6b2449af738a8e6f1538, type: 3}
       propertyPath: _isRandomButton
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 551970741518623991, guid: a155a26c114b6b2449af738a8e6f1538, type: 3}
+      propertyPath: rememberUnlockStatus
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 551970741518623991, guid: a155a26c114b6b2449af738a8e6f1538, type: 3}

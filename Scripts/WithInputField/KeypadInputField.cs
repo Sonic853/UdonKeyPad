@@ -6,22 +6,12 @@ using UnityEngine.UI;
 using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
+using VRC.SDK3.Persistence;
 
-namespace Sonic853.Udon.UdonKeypad
+namespace Sonic853.Udon.Keypad
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class KeypadInputField : SyncBehaviour
+    public class KeypadInputField : KeypadBase
     {
-        /// <summary>
-        /// 全局锁
-        /// </summary>
-        [Header("全局锁")]
-        public bool isGlobal = false;
-        /// <summary>
-        /// 密码
-        /// </summary>
-        [Header("密码")]
-        public string Passcode;
         /// <summary>
         /// 密码（用户输入）
         /// </summary>
@@ -37,17 +27,6 @@ namespace Sonic853.Udon.UdonKeypad
             }
         }
         /// <summary>
-        /// 是锁定的
-        /// </summary>
-        [Header("是锁定的")]
-        [UdonSynced]
-        public bool isLocked = true;
-        /// <summary>
-        /// 自动输入
-        /// </summary>
-        [Header("自动输入")]
-        public bool _autoEnter = false;
-        /// <summary>
         /// 显示文字
         /// </summary>
         [Header("显示文字")]
@@ -57,45 +36,6 @@ namespace Sonic853.Udon.UdonKeypad
         /// </summary>
         [Header("输入框")]
         [SerializeField] private InputField inputField;
-        /// <summary>
-        /// 解锁时显示的物体
-        /// </summary>
-        [Header("解锁时显示的物体")]
-        public GameObject[] _lockHiedObjects;
-        /// <summary>
-        /// 锁定时显示的物体
-        /// </summary>
-        [Header("锁定时显示的物体")]
-        public GameObject[] _lockShowObjects;
-        /// <summary>
-        /// 是否打乱按钮顺序
-        /// </summary>
-        [Header("是否打乱按钮顺序")]
-        public bool _isRandomButton = false;
-        /// <summary>
-        /// 密码按钮
-        /// </summary>
-        [NonSerialized] private GameObject[] Buttons = new GameObject[0];
-        /// <summary>
-        /// 启用玩家传送
-        /// </summary>
-        [Header("启用玩家传送")]
-        public bool _enableTeleport = false;
-        /// <summary>
-        /// 全局玩家传送（Danger）全部玩家会传送到一个点上
-        /// </summary>
-        [Header("全局玩家传送 **Danger**")]
-        public bool teleportIsGlobal = false;
-        /// <summary>
-        /// 使用传送点角度方向
-        /// </summary>
-        [Header("使用传送点角度方向")]
-        public bool useTeleportPointRotation = true;
-        /// <summary>
-        /// 传送点
-        /// </summary>
-        [Header("传送点")]
-        public Transform _teleportPoint;
         protected override void Start()
         {
             if (placeholder == null)
@@ -114,41 +54,9 @@ namespace Sonic853.Udon.UdonKeypad
             {
                 Debug.LogError("Keypad: inputField is not set!");
             }
-            if (_lockHiedObjects == null)
-            {
-                Debug.LogError("Keypad: _lockHiedObjects is not set!");
-            }
-            if (_lockShowObjects == null)
-            {
-                Debug.LogError("Keypad: _lockShowObjects is not set!");
-            }
-            // 寻找名为 KeypadButtons 的 GameObject
-            var KeypadButtons = gameObject.transform.Find("KeypadButtons");
-            if (KeypadButtons == null)
-            {
-                Debug.LogError("Keypad: KeypadButtons is not set!");
-            }
-            else
-            {
-                // 获取 KeypadButtons 下的所有子物体
-                Buttons = new GameObject[KeypadButtons.childCount];
-                for (int i = 0; i < KeypadButtons.childCount; i++)
-                {
-                    Buttons[i] = KeypadButtons.GetChild(i).gameObject;
-                }
-            }
-            RandomButton();
-
-            if (isGlobal && !Networking.IsOwner(gameObject))
-            {
-                base.Start();
-                return;
-            }
-            isSynced = true;
-
-            LockCheck();
+            base.Start();
         }
-        void LockCheck()
+        protected override void LockCheck()
         {
             if (isLocked)
             {
@@ -177,10 +85,18 @@ namespace Sonic853.Udon.UdonKeypad
                 _passcode = "";
             }
         }
-        public bool Lock()
+        public override bool Lock()
         {
             if (isLocked)
             {
+                foreach (var obj in _lockHiedObjects)
+                {
+                    obj.SetActive(false);
+                }
+                foreach (var obj in _lockShowObjects)
+                {
+                    obj.SetActive(true);
+                }
                 return true;
             }
             isLocked = true;
@@ -194,15 +110,26 @@ namespace Sonic853.Udon.UdonKeypad
             {
                 obj.SetActive(true);
             }
+            // 解锁后记住状态
+            if (rememberUnlockStatus && !isGlobal)
+            {
+                if (string.IsNullOrEmpty(lockName)) lockName = "Global";
+                PlayerData.SetBool($"Sonic853.Udon.Keypad.{lockName}", false);
+            }
             return true;
         }
-        public bool Unlock() => Unlock(_enableTeleport);
-        public bool UnlockWithTeleport() => Unlock(true);
-        public bool UnlockWithoutTeleport() => Unlock(false);
-        public bool Unlock(bool useTeleport)
+        public override bool Unlock(bool useTeleport)
         {
             if (!isLocked)
             {
+                foreach (var obj in _lockHiedObjects)
+                {
+                    obj.SetActive(true);
+                }
+                foreach (var obj in _lockShowObjects)
+                {
+                    obj.SetActive(false);
+                }
                 return true;
             }
             isLocked = false;
@@ -217,22 +144,22 @@ namespace Sonic853.Udon.UdonKeypad
             {
                 obj.SetActive(false);
             }
+            // 解锁后记住状态
+            if (rememberUnlockStatus && !isGlobal)
+            {
+                if (string.IsNullOrEmpty(lockName)) lockName = "Global";
+                PlayerData.SetBool($"Sonic853.Udon.Keypad.{lockName}", true);
+            }
             return true;
         }
-        public void GoTeleport()
-        {
-            if (_enableTeleport && _teleportPoint != null)
-            {
-                Networking.LocalPlayer.TeleportTo(_teleportPoint.position, useTeleportPointRotation ? _teleportPoint.rotation : Networking.LocalPlayer.GetRotation());
-            }
-        }
-        public string ButtonPush(string buttonValue)
+        public override string ButtonPush(string buttonValue)
         {
             switch (buttonValue)
             {
                 case "Enter":
                     {
-                        if (CheckPasscode())
+                        if (!enableWhiteList) isWhitelist = false;
+                        if (isWhitelist || CheckPasscode())
                         {
                             if (isGlobal)
                             {
@@ -287,7 +214,7 @@ namespace Sonic853.Udon.UdonKeypad
                     }
             }
         }
-        bool CheckPasscode()
+        protected override bool CheckPasscode()
         {
             RandomButton();
             if (Passcode == _passcode)
@@ -303,45 +230,21 @@ namespace Sonic853.Udon.UdonKeypad
                 return false;
             }
         }
-        public void RandomButton()
-        {
-            if (!_isRandomButton)
-                return;
-            if (Buttons.Length <= 0)
-            {
-                Debug.LogError("Keypad: Buttons is not set!");
-                return;
-            }
-            // 打乱按钮顺序
-            for (int i = 0; i < Buttons.Length; i++)
-            {
-                var temp = Buttons[i];
-                var randomIndex = UnityEngine.Random.Range(i, Buttons.Length);
-                Buttons[i] = Buttons[randomIndex];
-                Buttons[randomIndex] = temp;
-            }
-            // 重新设置按钮顺序
-            for (int i = 0; i < Buttons.Length; i++)
-            {
-                Buttons[i].transform.SetSiblingIndex(i);
-            }
-        }
-        public string ButtonPush1() => ButtonPush("1");
-        public string ButtonPush2() => ButtonPush("2");
-        public string ButtonPush3() => ButtonPush("3");
-        public string ButtonPush4() => ButtonPush("4");
-        public string ButtonPush5() => ButtonPush("5");
-        public string ButtonPush6() => ButtonPush("6");
-        public string ButtonPush7() => ButtonPush("7");
-        public string ButtonPush8() => ButtonPush("8");
-        public string ButtonPush9() => ButtonPush("9");
-        public string ButtonPush0() => ButtonPush("0");
-        public string ButtonPushEnter() => ButtonPush("Enter");
-        public string ButtonPushClear() => ButtonPush("Clear");
         public override void OnDeserialization()
         {
             base.OnDeserialization();
-            LockCheck();
+        }
+        public override void OnPlayerDataUpdated(VRCPlayerApi player, PlayerData.Info[] infos)
+        {
+            base.OnPlayerDataUpdated(player, infos);
+        }
+        /// <summary>
+        /// 当玩家数据加载后触发
+        /// </summary>
+        /// <param name="player"></param>
+        public override void OnPlayerRestored(VRCPlayerApi player)
+        {
+            base.OnPlayerRestored(player);
         }
     }
 }
