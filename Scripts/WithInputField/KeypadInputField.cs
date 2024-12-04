@@ -30,12 +30,12 @@ namespace Sonic853.Udon.Keypad
         /// 显示文字
         /// </summary>
         [Header("显示文字")]
-        [SerializeField] private Text placeholder;
+        [SerializeField] protected Text placeholder;
         /// <summary>
         /// 输入框
         /// </summary>
         [Header("输入框")]
-        [SerializeField] private InputField inputField;
+        [SerializeField] protected InputField inputField;
         protected override void Start()
         {
             if (placeholder == null)
