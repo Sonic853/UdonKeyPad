@@ -5,6 +5,7 @@ using UnityEngine;
 using VRC.SDK3.Persistence;
 using VRC.SDKBase;
 using VRC.Udon;
+using VRC.Udon.Common.Interfaces;
 
 namespace Sonic853.Udon.Keypad
 {
@@ -120,12 +121,128 @@ namespace Sonic853.Udon.Keypad
 
             LockCheck();
         }
-        protected virtual void LockCheck() { }
-        public virtual bool Lock() => false;
+        /// <summary>
+        /// 密码
+        /// </summary>
+        public virtual string GetPasscode() => Passcode;
+        /// <summary>
+        /// 设置密码
+        /// </summary>
+        public virtual void SetPasscode(string passcode) => Passcode = passcode;
+        /// <summary>
+        /// 验证密码
+        /// </summary>
+        public virtual bool VerifyPasscode(string passcode) => GetPasscode() == passcode;
+        /// <summary>
+        /// 密码（用户输入）
+        /// </summary>
+        protected virtual string GetInputField() => "You need to override this method.";
+        /// <summary>
+        /// 密码（用户输入）
+        /// </summary>
+        protected virtual void SetInputField(string input) { }
+        /// <summary>
+        /// 显示文字
+        /// </summary>
+        protected virtual void SetPlaceholder(string text) { }
+        protected virtual void LockCheck() {
+            if (isLocked)
+            {
+                if (isGlobal)
+                {
+                    SendCustomNetworkEvent(NetworkEventTarget.All, nameof(Lock));
+                }
+                else
+                {
+                    Lock();
+                }
+                SetPlaceholder("Locked");
+                SetInputField("");
+            }
+            else
+            {
+                if (isGlobal)
+                {
+                    SendCustomNetworkEvent(NetworkEventTarget.All, teleportIsGlobal ? nameof(UnlockWithTeleport) : nameof(UnlockWithoutTeleport));
+                }
+                else
+                {
+                    Unlock();
+                }
+                SetPlaceholder("Unlocked");
+                SetInputField("");
+            }
+        }
+        public virtual bool Lock()
+        {
+            if (isLocked)
+            {
+                foreach (var obj in _lockHiedObjects)
+                {
+                    obj.SetActive(false);
+                }
+                foreach (var obj in _lockShowObjects)
+                {
+                    obj.SetActive(true);
+                }
+                return true;
+            }
+            isLocked = true;
+            SetPlaceholder("Locked");
+            SetInputField("");
+            foreach (var obj in _lockHiedObjects)
+            {
+                obj.SetActive(false);
+            }
+            foreach (var obj in _lockShowObjects)
+            {
+                obj.SetActive(true);
+            }
+            // 解锁后记住状态
+            if (rememberUnlockStatus && !isGlobal)
+            {
+                if (string.IsNullOrEmpty(lockName)) lockName = "Global";
+                PlayerData.SetBool($"Sonic853.Udon.Keypad.{lockName}", false);
+            }
+            return true;
+        }
         public virtual bool Unlock() => Unlock(_enableTeleport);
         public virtual bool UnlockWithTeleport() => Unlock(true);
         public virtual bool UnlockWithoutTeleport() => Unlock(false);
-        public virtual bool Unlock(bool useTeleport) => false;
+        public virtual bool Unlock(bool useTeleport)
+        {
+            if (!isLocked)
+            {
+                foreach (var obj in _lockHiedObjects)
+                {
+                    obj.SetActive(true);
+                }
+                foreach (var obj in _lockShowObjects)
+                {
+                    obj.SetActive(false);
+                }
+                return true;
+            }
+            isLocked = false;
+            SetPlaceholder("Unlocked");
+            SetInputField("");
+            if (useTeleport) GoTeleport();
+            foreach (var obj in _lockHiedObjects)
+            {
+                obj.SetActive(true);
+            }
+            foreach (var obj in _lockShowObjects)
+            {
+                obj.SetActive(false);
+            }
+            // 解锁后记住状态
+            if (rememberUnlockStatus && !isGlobal)
+            {
+                if (string.IsNullOrEmpty(lockName)) lockName = "Global";
+                PlayerData.SetBool($"Sonic853.Udon.Keypad.{lockName}", true);
+            }
+            return true;
+        }
         public void GoTeleport()
         {
             if (_enableTeleport && _teleportPoint != null)
@@ -133,9 +250,85 @@ namespace Sonic853.Udon.Keypad
                 Networking.LocalPlayer.TeleportTo(_teleportPoint.position, useTeleportPointRotation ? _teleportPoint.rotation : Networking.LocalPlayer.GetRotation());
             }
         }
-        public virtual string ButtonPush(string buttonValue) => "You need to override this method.";
-        
-        protected virtual bool CheckPasscode() => false;
+        public virtual string ButtonPush(string buttonValue)
+        {
+            switch (buttonValue)
+            {
+                case "Enter":
+                    {
+                        if (!enableWhiteList) isWhitelist = false;
+                        if (isWhitelist || CheckPasscode())
+                        {
+                            if (isGlobal)
+                            {
+                                SendCustomNetworkEvent(NetworkEventTarget.All, teleportIsGlobal ? nameof(UnlockWithTeleport) : nameof(UnlockWithoutTeleport));
+                            }
+                            else
+                            {
+                                Unlock();
+                            }
+                            return "Unlocked";
+                        }
+                        else
+                        {
+                            if (!isLocked)
+                            {
+                                return "Unlocked";
+                            }
+                            return "Incorrect";
+                        }
+                    }
+                case "Clear":
+                    {
+                        SetPlaceholder("Cleared");
+                        SetInputField("");
+                        if (!isLocked)
+                        {
+                            if (isGlobal)
+                            {
+                                SendCustomNetworkEvent(NetworkEventTarget.All, nameof(Lock));
+                            }
+                            else
+                            {
+                                Lock();
+                            }
+                        }
+                        return "Cleared";
+                    }
+                default:
+                    {
+                        if (!isLocked)
+                        {
+                            if (_enableTeleport)
+                                GoTeleport();
+                            return "Unlocked";
+                        }
+                        SetInputField(GetInputField() + buttonValue);
+                        SetPlaceholder("");
+                        if (_autoEnter && GetPasscode().Length == GetInputField().Length)
+                        {
+                            return ButtonPush("Enter");
+                        }
+                        return GetInputField();
+                    }
+            }
+        }
+        protected virtual bool CheckPasscode()
+        {
+            RandomButton();
+            if (VerifyPasscode(GetInputField()))
+            {
+                SetPlaceholder("Unlocked");
+                SetInputField("");
+                return true;
+            }
+            else
+            {
+                SetPlaceholder("Incorrect");
+                SetInputField("");
+                return false;
+            }
+        }
         public void RandomButton()
         {
             if (!_isRandomButton)
