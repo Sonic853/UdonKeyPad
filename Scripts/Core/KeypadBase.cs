@@ -12,6 +12,11 @@ namespace Sonic853.Udon.Keypad
     public class KeypadBase : SyncBehaviour
     {
         /// <summary>
+        /// 实际上 GetUdonTypeName() 可以解决
+        /// </summary>
+        /// <returns></returns>
+        // public virtual string ProgramName() => "Sonic853.Udon.Keypad";
+        /// <summary>
         /// 全局锁
         /// </summary>
         [Header("全局锁")]
@@ -21,6 +26,14 @@ namespace Sonic853.Udon.Keypad
         /// </summary>
         [Header("密码")]
         public string Passcode;
+        /// <summary>
+        /// 密码（用户输入）当创作者未指定输入框时会被调用
+        /// </summary>
+        protected string inputFieldText = "";
+        /// <summary>
+        /// 显示文字，当创作者未指定输入框时会被调用
+        /// </summary>
+        protected string placeholderText = "";
         /// <summary>
         /// 是锁定的
         /// </summary>
@@ -96,11 +109,7 @@ namespace Sonic853.Udon.Keypad
         {
             // 寻找名为 KeypadButtons 的 GameObject
             var KeypadButtons = gameObject.transform.Find("KeypadButtons");
-            if (KeypadButtons == null)
-            {
-                Debug.LogError("Keypad: KeypadButtons is not set!");
-            }
-            else
+            if (KeypadButtons != null)
             {
                 // 获取 KeypadButtons 下的所有子物体
                 Buttons = new GameObject[KeypadButtons.childCount];
@@ -136,16 +145,17 @@ namespace Sonic853.Udon.Keypad
         /// <summary>
         /// 密码（用户输入）
         /// </summary>
-        protected virtual string GetInputField() => "You need to override this method.";
+        protected virtual string GetInputField() => inputFieldText;
         /// <summary>
         /// 密码（用户输入）
         /// </summary>
-        protected virtual void SetInputField(string input) { }
+        protected virtual void SetInputField(string input) => inputFieldText = input;
         /// <summary>
         /// 显示文字
         /// </summary>
-        protected virtual void SetPlaceholder(string text) { }
-        protected virtual void LockCheck() {
+        public virtual void SetPlaceholder(string text) => placeholderText = text;
+        protected virtual void LockCheck()
+        {
             if (isLocked)
             {
                 if (isGlobal)

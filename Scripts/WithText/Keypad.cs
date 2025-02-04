@@ -42,8 +42,20 @@ namespace Sonic853.Udon.Keypad
             }
             base.Start();
         }
-        protected override string GetInputField() => text.text;
-        protected override void SetInputField(string input) => text.text = input;
-        protected override void SetPlaceholder(string text) => placeholder.text = text;
+        protected override string GetInputField() => text != null ? text.text : inputFieldText;
+        protected override void SetInputField(string input)
+        {
+            if (text != null)
+                inputFieldText = text.text = input;
+            else
+                inputFieldText = input;
+        }
+        public override void SetPlaceholder(string text)
+        {
+            if (placeholder != null)
+                placeholderText = placeholder.text = text;
+            else
+                placeholderText = text;
+        }
     }
 }

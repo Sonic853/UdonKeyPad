@@ -1,6 +1,6 @@
 {
     "name": "com.sonic853.udonkeypad",
-    "version": "2.1.1",
+    "version": "2.2.0",
     "displayName": "Sonic853 - Udon KeyPad",
     "description": "A open Source KeyPad | 一个开源的数字密码盘，兼容 VRChat",
     "unity": "2022.3",
