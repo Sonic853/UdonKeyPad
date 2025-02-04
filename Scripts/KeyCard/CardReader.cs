@@ -29,7 +29,7 @@ namespace Sonic853.Udon.Keypad
             if (keypad == null || !keypad.isLocked) { return; }
             keypad.ButtonPushClear();
             keypad.ButtonPush(card.passcode);
-            keypad.ButtonPushEnter();
+            if (!keypad._autoEnter) keypad.ButtonPushEnter();
             if (!keypad.isLocked)
             {
                 card.isUsed = true;

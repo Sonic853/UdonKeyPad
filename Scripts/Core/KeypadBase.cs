@@ -315,7 +315,7 @@ namespace Sonic853.Udon.Keypad
                         }
                         SetInputField(GetInputField() + buttonValue);
                         SetPlaceholder("");
-                        if (_autoEnter && GetPasscode().Length == GetInputField().Length)
+                        if (_autoEnter && GetPasscode().Length <= GetInputField().Length)
                         {
                             return ButtonPush("Enter");
                         }
