@@ -21,7 +21,15 @@ namespace Sonic853.Udon.Keypad
             if (((UdonSharpBehaviour)cardobj).GetUdonTypeName() != "Sonic853.Udon.Keypad.KeyCard") { return; }
             if (audioSource != null) audioSource.Play();
             var card = (KeyCard)cardobj;
-            if (!card.valid) { return; }
+            if (!card.valid)
+            {
+                if (keypad != null && keypad.isLocked)
+                {
+                    keypad.ButtonPushClear();
+                    keypad.SetPlaceholder("Invalid");
+                }
+                return;
+            }
             if (card.singleUse && card.isUsed)
             {
                 if (keypad != null && keypad.isLocked)
