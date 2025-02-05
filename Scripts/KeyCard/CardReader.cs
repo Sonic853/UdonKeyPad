@@ -10,10 +10,16 @@ namespace Sonic853.Udon.Keypad
     public class CardReader : UdonSharpBehaviour
     {
         public KeypadBase keypad;
+        /// <summary>
+        /// 声音
+        /// </summary>
+        [Header("声音")]
+        public AudioSource audioSource;
         void OnTriggerEnter(Collider other)
         {
-            var cardobj = other.gameObject.GetComponent(typeof(UdonSharpBehaviour));
+            var cardobj = other.gameObject.GetComponentInChildren(typeof(UdonSharpBehaviour));
             if (((UdonSharpBehaviour)cardobj).GetUdonTypeName() != "Sonic853.Udon.Keypad.KeyCard") { return; }
+            if (audioSource != null) audioSource.Play();
             var card = (KeyCard)cardobj;
             if (!card.valid) { return; }
             if (card.singleUse && card.isUsed)
