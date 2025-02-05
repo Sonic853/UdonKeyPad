@@ -24,14 +24,22 @@ namespace Sonic853.Udon.Keypad
             if (!card.valid) { return; }
             if (card.singleUse && card.isUsed)
             {
-                if (keypad != null && keypad.isLocked) 
+                if (keypad != null && keypad.isLocked)
                 {
                     keypad.ButtonPushClear();
                     keypad.SetPlaceholder("Card Used");
                 }
                 return;
             }
-            if (card.expireTime != -1 && (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds > card.expireTime) { return; }
+            if (card.expireTime != -1 && (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds > card.expireTime)
+            {
+                if (keypad != null && keypad.isLocked)
+                {
+                    keypad.ButtonPushClear();
+                    keypad.SetPlaceholder("Expired");
+                }
+                return;
+            }
             if (keypad == null || !keypad.isLocked) { return; }
             keypad.ButtonPushClear();
             keypad.ButtonPush(card.passcode);
