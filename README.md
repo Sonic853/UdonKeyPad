@@ -2,6 +2,12 @@
 
 ![2022-11-28_14-06-30](https://user-images.githubusercontent.com/8389962/204208464-ac5f9711-0cc5-4e4e-a303-f3994b901864.png)
 
+![2025-02-05_23-24-29](https://github.com/user-attachments/assets/393a6c68-e0e0-44df-a9f8-30bf80abb96a)
+
+![2025-02-06_02-13-38](https://github.com/user-attachments/assets/c8ff4e26-9c4b-463c-8a13-bf0bab93db74)
+
+![2025-02-04_23-38-15](https://github.com/user-attachments/assets/150d64a2-6745-4f3a-9f65-ca18ba928776)
+
 一个开源的数字密码盘，兼容 VRChat
 
 使用方法参考 Demo 场景。
