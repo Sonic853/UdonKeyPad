@@ -6,16 +6,12 @@ using UnityEngine.UI;
 using VRC.SDK3.Data;
 using VRC.SDKBase;
 using VRC.Udon;
+using VRC.Udon.Common.Interfaces;
 
 namespace Sonic853.Udon.Keypad
 {
-    public class CardWriter : SyncBehaviour
+    public class CardWriter : UdonSharpBehaviour
     {
-        /// <summary>
-        /// 请求写入
-        /// </summary>
-        [UdonSynced]
-        bool needWriteCard = false;
         /// <summary>
         /// 卡片是否有效
         /// </summary>
@@ -24,7 +20,6 @@ namespace Sonic853.Udon.Keypad
         /// <summary>
         /// 卡片是否有效
         /// </summary>
-        [UdonSynced, FieldChangeCallback(nameof(Valid))]
         bool valid = true;
         /// <summary>
         /// 卡片是否有效
@@ -46,7 +41,6 @@ namespace Sonic853.Udon.Keypad
         /// <summary>
         /// 密码
         /// </summary>
-        [UdonSynced, FieldChangeCallback(nameof(Passcode))]
         string passcode = "";
         /// <summary>
         /// 密码
@@ -68,7 +62,6 @@ namespace Sonic853.Udon.Keypad
         /// <summary>
         /// 一次性卡片
         /// </summary>
-        [UdonSynced, FieldChangeCallback(nameof(SingleUse))]
         bool singleUse = false;
         /// <summary>
         /// 一次性卡片
@@ -122,7 +115,6 @@ namespace Sonic853.Udon.Keypad
         /// <summary>
         /// 卡片有效时间
         /// </summary>
-        [UdonSynced, FieldChangeCallback(nameof(ExpireTime))]
         int expireTime = -1;
         /// <summary>
         /// 卡片有效时间
@@ -182,40 +174,25 @@ namespace Sonic853.Udon.Keypad
                 if (CardStatus != null) CardStatus.text = "Please place the card on the reader";
                 return;
             }
-            if (!Networking.IsOwner(gameObject))
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
             Valid = validUI.isOn;
             SingleUse = singleUseUI.isOn;
             var time = -1;
             if (expireTimeData.TryGetValue(expireTimeUI.captionText.text, out var itemToken)) time = itemToken.Int;
             ExpireTime = time;
             Passcode = passcodeUI.text;
-            if (targetCard.isGlobal)
-            {
-                needWriteCard = true;
-                RequestSerialization_();
-            }
-            else
-            {
-                WriteCard();
-            }
-        }
-        public void WriteCard()
-        {
-            if (targetCard == null)
-            {
-                if (CardStatus != null) CardStatus.text = "Please place the card on the reader";
-                return;
-            }
+            if (targetCard.isGlobal && !Networking.IsOwner(targetCard.gameObject))
+                Networking.SetOwner(Networking.LocalPlayer, targetCard.gameObject);
             targetCard.valid = Valid;
             if (!string.IsNullOrWhiteSpace(Passcode)) targetCard.passcode = Passcode;
             targetCard.singleUse = SingleUse;
             targetCard.isUsed = false;
             if (ExpireTime == -1) targetCard.expireTime = -1;
             else targetCard.expireTime = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds + ExpireTime;
+            if (targetCard.isGlobal) targetCard.RequestSerialization_();
             if (CardStatus != null) CardStatus.text = "Write Success";
-            if (audioSource != null) audioSource.Play();
+            if (audioSource != null) SendCustomNetworkEvent(NetworkEventTarget.All, nameof(PlaySound));
         }
+        public void PlaySound() => audioSource.Play();
         /// <summary>
         /// 转换时间
         /// </summary>
@@ -225,15 +202,6 @@ namespace Sonic853.Udon.Keypad
         {
             var time = DateTimeOffset.FromUnixTimeSeconds(expireTime);
             return time.ToLocalTime().ToString("HH:mm:ss");
-        }
-        public override void OnDeserialization()
-        {
-            base.OnDeserialization();
-            if (needWriteCard)
-            {
-                WriteCard();
-                needWriteCard = false;
-            }
         }
     }
 }

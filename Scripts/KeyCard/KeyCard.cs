@@ -46,7 +46,7 @@ namespace Sonic853.Udon.Keypad
         [UdonSynced]
         public int expireTime = -1;
         protected override void Start() {
-            if (isGlobal && !Networking.IsOwner(gameObject))
+            if (isGlobal)
             {
                 base.Start();
                 return;
