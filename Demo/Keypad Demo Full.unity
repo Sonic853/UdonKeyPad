@@ -4053,6 +4053,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: KeypadModel
       objectReference: {fileID: 0}
+    - target: {fileID: 6031333154810115915, guid: 24e90285151ccc244b4034ce8261239b, type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 6031333154810115915, guid: 24e90285151ccc244b4034ce8261239b, type: 3}
     - target: {fileID: 6315424855379085659, guid: 24e90285151ccc244b4034ce8261239b, type: 3}
       propertyPath: serializationData.Prefab
       value: 
@@ -4230,6 +4234,10 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 6589315724151605623, guid: b2ce5c65b7ff0b746b3c0c9bd2e99e20, type: 3}
+    - target: {fileID: 6893366250575015439, guid: b2ce5c65b7ff0b746b3c0c9bd2e99e20, type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 6893366250575015439, guid: b2ce5c65b7ff0b746b3c0c9bd2e99e20, type: 3}
     - target: {fileID: 6943216855082243984, guid: b2ce5c65b7ff0b746b3c0c9bd2e99e20, type: 3}
       propertyPath: serializationData.Prefab
       value: 
