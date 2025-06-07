@@ -8,6 +8,8 @@
 
 ![2025-02-04_23-38-15](https://github.com/user-attachments/assets/150d64a2-6745-4f3a-9f65-ca18ba928776)
 
+KeyPad Model by [@_plaggy](https://x.com/_plaggy) Modified by me
+
 一个开源的数字密码盘，兼容 VRChat
 
 使用方法参考 Demo 场景。
